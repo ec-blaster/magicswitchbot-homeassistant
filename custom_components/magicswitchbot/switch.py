@@ -80,7 +80,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         self._state = state.state == "on"
         self._hass.data[DOMAIN][self.entity_id] = self._device
         _LOGGER.info("Added Magic Swithbot with entity_id '%s' to the list of custom switches", self.entity_id)
-
+        
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""
         if self._device.turn_on():
@@ -97,6 +97,21 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         else:
             self._last_run_success = False
 
+    @property
+    def device_info(self):
+        """Define a device for this switch"""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id)
+            },
+            "name": self.name,
+            "manufacturer": "Shenzhen Interear Intelligent Technology",
+            "model": "Magic Switchbot",
+            "sw_version": "2.0",
+            #"via_device": (DOMAIN, self.unique_id)
+        }
+        
     @property
     def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
