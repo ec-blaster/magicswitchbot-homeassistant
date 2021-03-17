@@ -1,23 +1,23 @@
-from typing import Any, Dict
-from magicswitchbot import MagicSwitchbot
+from typing import Dict, Any
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
-    CONF_COUNT,
-    CONF_DEVICE_ID,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PASSWORD
+  CONF_MAC,
+  CONF_NAME,
+  CONF_PASSWORD,
+  CONF_DEVICE_ID,
+  CONF_COUNT
 )
-from homeassistant.auth.mfa_modules import _LOGGER
+from homeassistant.helpers.restore_state import RestoreEntity
+from magicswitchbot import MagicSwitchbot, _LOGGER
+
+from .const import DOMAIN
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 DEFAULT_NAME = "MagicSwitchbot"
 DEFAULT_DEVICE_ID = 0
 DEFAULT_RETRY_COUNT = 3
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.restore_state import RestoreEntity
-import voluptuous as vol
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -37,29 +37,39 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Magic Switchbot component."""
     
+    '''Get the switch config'''
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]
     password = config.get(CONF_PASSWORD)
     retry_count = config.get(CONF_COUNT)
     bt_device = config.get(CONF_DEVICE_ID)
     
+    '''Intiialize the device'''
     device = MagicSwitchbot(mac=mac_addr, retry_count=retry_count, password=password, interface=bt_device)
-    device.connect()
-    switch = MagicSwitchbotSwitch(device, mac_addr, name)
     
-    async_add_entities([switch])
+    '''Connect asynchronously'''
+    # device.connect()
+    yield from hass.async_add_job(device.connect)
+    
+    '''Initialize out custom switchs list if it does not exist in HA'''
+    if DOMAIN not in hass.data:
+      hass.data[DOMAIN] = {}
+    
+    '''Create our entity'''
+    async_add_entities([MagicSwitchbotSwitch(device, mac_addr, name)])
 
     
 class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
     """Custom switch for MagicSwitchbot"""
 
-    def __init__(self, device, mac, name) -> None:
+    def __init__(self, device, hass, mac, name) -> None:
         """Initialize the MagicSwitchbot."""
         self._state = None
+        self._device = device
+        self._hass = hass
         self._last_run_success = None
         self._name = name
         self._mac = mac
-        self._device = device
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -68,7 +78,8 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         if not state:
             return
         self._state = state.state == "on"
-        _LOGGER.info("Se ha añadido una entidad con el código %s", self.entity_id)
+        self._hass.data[DOMAIN][self.entity_id] = self._device
+        _LOGGER.info("Added Magic Swithbot with entity_id '%s' to the list of custom switches", self.entity_id)
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""
