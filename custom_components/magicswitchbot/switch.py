@@ -1,0 +1,116 @@
+from typing import Any, Dict
+from magicswitchbot import MagicSwitchbot
+
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.const import (
+    CONF_COUNT,
+    CONF_DEVICE_ID,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD
+)
+from homeassistant.auth.mfa_modules import _LOGGER
+
+DEFAULT_NAME = "MagicSwitchbot"
+DEFAULT_DEVICE_ID = 0
+DEFAULT_RETRY_COUNT = 3
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
+import voluptuous as vol
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_COUNT, default=DEFAULT_RETRY_COUNT): vol.All(
+            vol.Coerce(int), vol.Range(min=0)
+        ),
+        vol.Optional(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): vol.All(
+            vol.Coerce(int), vol.Range(min=0)
+        ),
+    }
+)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Magic Switchbot component."""
+    
+    name = config.get(CONF_NAME)
+    mac_addr = config[CONF_MAC]
+    password = config.get(CONF_PASSWORD)
+    retry_count = config.get(CONF_COUNT)
+    bt_device = config.get(CONF_DEVICE_ID)
+    
+    device = MagicSwitchbot(mac=mac_addr, retry_count=retry_count, password=password, interface=bt_device)
+    device.connect()
+    switch = MagicSwitchbotSwitch(device, mac_addr, name)
+    
+    async_add_entities([switch])
+
+    
+class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
+    """Custom switch for MagicSwitchbot"""
+
+    def __init__(self, device, mac, name) -> None:
+        """Initialize the MagicSwitchbot."""
+        self._state = None
+        self._last_run_success = None
+        self._name = name
+        self._mac = mac
+        self._device = device
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._state = state.state == "on"
+        _LOGGER.info("Se ha añadido una entidad con el código %s", self.entity_id)
+
+    def turn_on(self, **kwargs) -> None:
+        """Turn device on."""
+        if self._device.turn_on():
+            self._state = True
+            self._last_run_success = True
+        else:
+            self._last_run_success = False
+
+    def turn_off(self, **kwargs) -> None:
+        """Turn device off."""
+        if self._device.turn_off():
+            self._state = False
+            self._last_run_success = True
+        else:
+            self._last_run_success = False
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return true if unable to access real state of entity."""
+        return True
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return self._state
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return "magicswitchbot_" + self._mac.replace(":", "")
+
+    @property
+    def name(self) -> str:
+        """Return the name of the switch."""
+        return self._name
+
+    @property
+    def icon(self) -> str:
+        return "mdi:toggle-switch"
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Return the state attributes."""
+        return {"last_run_success": self._last_run_success}

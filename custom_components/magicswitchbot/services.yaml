@@ -1,0 +1,6 @@
+push:
+  description: Push a Magic Switchbot button
+  fields:
+    entity_id:
+      description: Entity id of the Magic Switchbot to use as a push button
+      example: switch.magic_switchbot

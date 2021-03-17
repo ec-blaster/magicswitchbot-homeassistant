@@ -1,0 +1,10 @@
+{
+  "codeowners": ["@ec-blaster"],
+  "config_flow": false,
+  "dependencies": [],
+  "documentation": "https://github.com/ec-blaster/magicswitchbot-homeassistant/doc/",
+  "domain": "magicswitchbot",
+  "name": "Magic Switchbot",
+  "requirements": ["pyMagicSwitchbot>=1.0.0"],
+  "version": "1.0.0"
+}
