@@ -53,7 +53,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     
     '''Initialize out custom switchs list if it does not exist in HA'''
     if DOMAIN not in hass.data:
-      hass.data[DOMAIN] = {}
+        hass.data[DOMAIN] = {}
     
     '''Create our entity'''
     async_add_entities([MagicSwitchbotSwitch(device, mac_addr, name)])
