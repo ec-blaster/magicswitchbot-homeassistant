@@ -48,7 +48,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     device = MagicSwitchbot(mac=mac_addr, retry_count=retry_count, password=password, interface=bt_device)
     
     '''Connect asynchronously'''
-    device.connect()
+    await hass.async_add_executor_job(device.connect)
+    
+    '''Let's auth (max time 5 seconds or will be disconnected)'''
+    '''TODO: catch auth or connect exceptions'''
+    await hass.async_add_executor_job(device.auth)
     #hass.async_add_job(device.connect)
     
     '''Initialize out custom switchs list if it does not exist in HA'''
