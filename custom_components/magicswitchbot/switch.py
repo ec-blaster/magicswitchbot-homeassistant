@@ -1,4 +1,7 @@
+import logging
 from typing import Dict, Any
+
+from magicswitchbot import MagicSwitchbot
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
@@ -8,16 +11,20 @@ from homeassistant.const import (
   CONF_DEVICE_ID,
   CONF_COUNT
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-from magicswitchbot import MagicSwitchbot, _LOGGER
+import voluptuous as vol
 
 from .const import DOMAIN
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+
+from datetime import timedelta
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MagicSwitchbot"
 DEFAULT_DEVICE_ID = 0
 DEFAULT_RETRY_COUNT = 3
+SCAN_INTERVAL = timedelta(seconds=60)  # We'll check the battery level every minute
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -53,7 +60,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     '''Let's auth (max time 5 seconds or will be disconnected)'''
     '''TODO: catch auth or connect exceptions'''
     await hass.async_add_executor_job(device.auth)
-    # hass.async_add_job(device.connect)
     
     '''Initialize out custom switchs list if it does not exist in HA'''
     if DOMAIN not in hass.data:
@@ -71,9 +77,10 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         self._state = None
         self._device = device
         self._hass = hass
-        self._last_run_success = None
+        self._last_action = None
         self._name = name
         self._mac = mac
+        self._battery_level = None
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -82,26 +89,33 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         if not state:
             return
         self._state = state.state == "on"
-        self._hass.data[DOMAIN][self.entity_id] = self._device
-        _LOGGER.info("Added Magic Swithbot with entity_id '%s' to the list of custom switches", self.entity_id)
+        self._hass.data[DOMAIN][self.entity_id] = self
         
-    def turn_on(self, **kwargs) -> None:
+        '''We get a first update at start'''
+        await self._hass.async_add_executor_job(self.update)
+        
+        _LOGGER.info("Added Magic Swithbot with entity_id '%s' to the list of custom switches", self.entity_id)
+    
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn device on."""
         if self._device.turn_on():
             self._state = True
-            self._last_run_success = True
+            self._last_action = "On"
         else:
-            self._last_run_success = False
+            self._state = None
+            self._last_action = "Error"
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn device off."""
         if self._device.turn_off():
             self._state = False
-            self._last_run_success = True
+            self._last_action = "Off"
         else:
-            self._last_run_success = False
+            self._state = None
+            self._last_action = "Error"
 
     '''This block will only get called when using Config Entries'''
+
     @property
     def device_info(self):
         """Define a device for this switch"""
@@ -117,11 +131,14 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             "via_device": (DOMAIN, self.unique_id),
         }
         
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if unable to access real state of entity."""
-        return True
-
+    async def async_update(self):
+        """We get the battery level on a periodic polling basis"""
+        self._battery_level = self._device.get_battery()
+        _LOGGER.debug("Battery level of %s: %d%%", self.entity_id, self._battery_level)
+        
+    def update(self):
+        self._battery_level = self._device.get_battery()
+        
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
@@ -144,4 +161,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
-        return {"last_run_success": self._last_run_success}
+        return {
+            "last_action": self._last_action,
+            "battery_level":self._battery_level
+        }

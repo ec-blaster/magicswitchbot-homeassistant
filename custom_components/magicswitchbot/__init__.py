@@ -4,8 +4,9 @@ import logging
 from .const import DOMAIN
 from homeassistant.core import callback
 
-from homeassistant.auth.mfa_modules import _LOGGER
 from homeassistant.const import ATTR_ENTITY_ID
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
@@ -28,13 +29,16 @@ def async_setup(hass, config):
   
         try:
             _LOGGER.info("Pushing the button using MagicSwitchbot device at %s...", entity._mac)
-            hass.async_add_job(entity.push)
+            hass.async_add_job(entity._device.push)
             
-            '''Once pushed, the switch gets back to "Off" state'''
+            '''Once pushed, the switch muest get back to "Off" state'''
             entity._state = False
-            hass.data[DOMAIN][entity_id] = entity
-        except:
-            _LOGGER.error("Failed to execute the psuh command with Magic Switchbot device")
+            entity._last_action = "Push"            
+        except Exception as e:
+            entity._state = None
+            entity._last_action = "Error"
+            _LOGGER.error("Failed to execute the push command with Magic Switchbot device: %s", str(e))
+        entity.async_write_ha_state()
         
         return
 
