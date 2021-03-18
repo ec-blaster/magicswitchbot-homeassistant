@@ -29,6 +29,10 @@ def async_setup(hass, config):
         try:
             _LOGGER.info("Pushing the button using MagicSwitchbot device at %s...", entity._mac)
             hass.async_add_job(entity.push)
+            
+            '''Once pushed, the switch gets back to "Off" state'''
+            entity._state = False
+            hass.data[DOMAIN][entity_id] = entity
         except:
             _LOGGER.error("Failed to execute the psuh command with Magic Switchbot device")
         
