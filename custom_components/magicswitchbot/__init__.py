@@ -20,18 +20,15 @@ def async_setup(hass, config):
         entity_id = call.data.get(ATTR_ENTITY_ID)
         
         '''We look for that entity id in our known custom switches list'''
-        entity = None
-        for switch in hass.data[DOMAIN].values():
-            if switch.entity_id == entity_id:
-                entity = switch
-  
-        if entity is None:
+        if entity_id in hass.data[DOMAIN]:
+            entity = hass.data[DOMAIN][entity_id]
+        else:
             _LOGGER.error("There is no Magic Switchbot defined as '%s'", entity_id)
             return
   
         try:
             _LOGGER.info("Pushing the button using MagicSwitchbot device at %s...", entity._mac)
-            yield from hass.async_add_job(entity.push)
+            hass.async_add_job(entity.push)
         except:
             _LOGGER.error("Failed to execute the psuh command with Magic Switchbot device")
         

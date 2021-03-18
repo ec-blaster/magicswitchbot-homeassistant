@@ -44,19 +44,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     retry_count = config.get(CONF_COUNT)
     bt_device = config.get(CONF_DEVICE_ID)
     
-    '''Intiialize the device'''
+    '''Initialize the device'''
     device = MagicSwitchbot(mac=mac_addr, retry_count=retry_count, password=password, interface=bt_device)
     
     '''Connect asynchronously'''
-    # device.connect()
-    yield from hass.async_add_job(device.connect)
+    device.connect()
+    #hass.async_add_job(device.connect)
     
     '''Initialize out custom switchs list if it does not exist in HA'''
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     
     '''Create our entity'''
-    async_add_entities([MagicSwitchbotSwitch(device, mac_addr, name)])
+    async_add_entities([MagicSwitchbotSwitch(device, hass, mac_addr, name)])
 
     
 class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
@@ -109,7 +109,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             "manufacturer": "Shenzhen Interear Intelligent Technology",
             "model": "Magic Switchbot",
             "sw_version": "2.0",
-            #"via_device": (DOMAIN, self.unique_id)
+            # "via_device": (DOMAIN, self.unique_id)
         }
         
     @property
