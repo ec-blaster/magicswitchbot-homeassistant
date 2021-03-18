@@ -53,7 +53,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     '''Let's auth (max time 5 seconds or will be disconnected)'''
     '''TODO: catch auth or connect exceptions'''
     await hass.async_add_executor_job(device.auth)
-    #hass.async_add_job(device.connect)
+    # hass.async_add_job(device.connect)
     
     '''Initialize out custom switchs list if it does not exist in HA'''
     if DOMAIN not in hass.data:
@@ -101,6 +101,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         else:
             self._last_run_success = False
 
+    '''This block will only get called when using Config Entries'''
     @property
     def device_info(self):
         """Define a device for this switch"""
@@ -113,7 +114,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             "manufacturer": "Shenzhen Interear Intelligent Technology",
             "model": "Magic Switchbot",
             "sw_version": "2.0",
-            # "via_device": (DOMAIN, self.unique_id)
+            "via_device": (DOMAIN, self.unique_id),
         }
         
     @property
