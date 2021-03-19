@@ -5,6 +5,6 @@
   "documentation": "https://github.com/ec-blaster/magicswitchbot-homeassistant/doc/",
   "domain": "magicswitchbot",
   "name": "Magic Switchbot",
-  "requirements": ["pyMagicSwitchbot>=1.0.2"],
-  "version": "0.0.1"
+  "requirements": ["pyMagicSwitchbot>=1.0.3"],
+  "version": "0.0.2"
 }
