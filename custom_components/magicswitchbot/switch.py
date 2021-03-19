@@ -55,11 +55,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     device = MagicSwitchbot(mac=mac_addr, retry_count=retry_count, password=password, interface=bt_device)
     
     '''Connect asynchronously'''
-    await hass.async_add_executor_job(device.connect)
-    
-    '''Let's auth (max time 5 seconds or will be disconnected)'''
-    '''TODO: catch auth or connect exceptions'''
-    await hass.async_add_executor_job(device.auth)
+    res = await hass.async_add_executor_job(device.connect)
+    if res:
+        '''Let's auth (max time 5 seconds or will be disconnected)'''
+        await hass.async_add_executor_job(device.auth)
+    else:
+        _LOGGER.debug("Error connecting to device. Will retry in %d seconds", SCAN_INTERVAL)
     
     '''Initialize out custom switchs list if it does not exist in HA'''
     if DOMAIN not in hass.data:
@@ -134,7 +135,10 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
     async def async_update(self):
         """We get the battery level on a periodic polling basis"""
         self._battery_level = self._device.get_battery()
-        _LOGGER.debug("Battery level of %s: %d%%", self.entity_id, self._battery_level)
+        if self._battery_level is not None:
+            _LOGGER.debug("Battery level of %s: %d%%", self.entity_id, self._battery_level)
+        else:
+            _LOGGER.warn("Couldn't get battery level of %s", self.entity_id)
         
     def update(self):
         self._battery_level = self._device.get_battery()
