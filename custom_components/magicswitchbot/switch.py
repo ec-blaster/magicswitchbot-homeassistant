@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "MagicSwitchbot"
 DEFAULT_DEVICE_ID = 0
 DEFAULT_RETRY_COUNT = 3
-SCAN_INTERVAL = timedelta(seconds=10)  # We'll check the battery level every minute
+SCAN_INTERVAL = timedelta(seconds=60)  # We'll check the battery level every minute
 
 PROP_TO_ATTR = {
     "battery_level": "battery_level",
@@ -179,6 +179,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             "battery_level": self._battery_level
         }
 
+    @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Backwards compatibility. Will be soon deprecated"""
-        return self.extra_state_attributes()
+        return self.extra_state_attributes
