@@ -26,6 +26,11 @@ DEFAULT_DEVICE_ID = 0
 DEFAULT_RETRY_COUNT = 3
 SCAN_INTERVAL = timedelta(seconds=60)  # We'll check the battery level every minute
 
+PROP_TO_ATTR = {
+    "battery_level": "battery_level",
+    "last_action": "last_action",
+}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
@@ -161,11 +166,15 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
     @property
     def icon(self) -> str:
         return "mdi:toggle-switch"
-
+    
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         return {
             "last_action": self._last_action,
-            "battery_level":self._battery_level
+            "battery_level": self._battery_level
         }
+
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Backwards compatibility. Will be soon deprecated"""
+        return self.extra_state_attributes()

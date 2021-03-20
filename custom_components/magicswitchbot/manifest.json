@@ -3,7 +3,9 @@
   "config_flow": false,
   "dependencies": [],
   "documentation": "https://github.com/ec-blaster/magicswitchbot-homeassistant/doc/",
-  "domain": "magicswitchbot",
+  "domains": [
+    "switch"
+  ],
   "name": "Magic Switchbot",
   "requirements": ["pyMagicSwitchbot>=1.0.3"],
   "version": "0.0.2"
