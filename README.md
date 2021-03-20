@@ -98,7 +98,7 @@ This is the password you use to connect to the Magic Switchbot. You can set it w
 
 With the default configuration, you can use the Magic Switchbot as a switch, with states "On" and "Off". You must use an add-on that is shipped with the device and is sticked over the real switch you want to activate or deactivate, it works like a "hook" that pulls the switch when its state changes to "Off".
 
-But the Magic Switchbot has another mode that just "pushes" a button and retracts a little after that. To use this characteristic (that has no On-Off states), the component provides a service whose name is `pull` that you can use in your automations or from your lovelace cards.
+But the Magic Switchbot has another mode that just "pushes" a button and retracts a little after that. To use this characteristic (that has no On-Off states), the component provides a service whose name is `push` that you can use in your automations or from your lovelace cards.
 
 ### Service parameters
 
