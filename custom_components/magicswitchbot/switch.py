@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "MagicSwitchbot"
 DEFAULT_DEVICE_ID = 0
 DEFAULT_RETRY_COUNT = 3
-SCAN_INTERVAL = timedelta(seconds=60)  # We'll check the battery level every minute
+SCAN_INTERVAL = timedelta(seconds=10)  # We'll check the battery level every minute
 
 PROP_TO_ATTR = {
     "battery_level": "battery_level",
@@ -65,7 +65,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         '''Let's auth (max time 5 seconds or will be disconnected)'''
         await hass.async_add_executor_job(device.auth)
     else:
-        _LOGGER.debug("Error connecting to device. Will retry in %d seconds", SCAN_INTERVAL)
+        _LOGGER.warn("Error connecting to device at %s. Will retry in %d seconds", mac_addr, SCAN_INTERVAL.total_seconds())
     
     '''Initialize out custom switchs list if it does not exist in HA'''
     if DOMAIN not in hass.data:
@@ -148,6 +148,10 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
     def update(self):
         self._battery_level = self._device.get_battery()
         
+    @property
+    def available(self) -> bool:
+        return self._device._is_connected()
+    
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
