@@ -8,7 +8,7 @@
 	"domain": "magicswitchbot",
 	"name": "Magic Switchbot",
 	"requirements": [
-		"pyMagicSwitchbot>=1.0.3"
+		"pyMagicSwitchbot==1.0.4"
 	],
-	"version": "0.0.2"
+	"version": "0.0.3"
 }
