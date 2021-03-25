@@ -7,6 +7,15 @@ Using this component you can control on / off /push states of these little devic
 
 This component is based on a library that uses `bluepy`  to communicate with the devices via BLE (Bluetooth Low Energy), and only works on Linux.
 
+Depending on your system configuration, Python will try to install or compile `bluepy` on the first use. If you get a compile error when starting Home Assistant, you may have some Linux libraries missing. Try to install them:
+
+```bash
+$ sudo apt-get install build-essential
+$ sudo apt-get install libglib2.0-dev
+```
+
+and then restart Home Assistant.
+
 Additionally, if you are running Home Assistant Core as a non-root user, you must read the section "Notes for Home Assistant Core Installations" at [this integration](https://www.home-assistant.io/integrations/bluetooth_le_tracker/#rootless-setup-on-core-installs) documentation. In fact you should run these commands to get the required permissions for HA to access the bluetooth controller:
 
 ``` bash
