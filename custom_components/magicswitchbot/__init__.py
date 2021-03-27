@@ -1,4 +1,11 @@
-"""The magicswitchbot component."""
+"""
+Magic Switchbot component for Home Assistant
+Service definition
+
+@author: ec-blaster
+@since: March 2021
+@contact: https://github.com/ec-blaster/magicswitchbot-homeassistant
+"""
 import asyncio
 import logging
 from .const import DOMAIN
@@ -31,19 +38,18 @@ def async_setup(hass, config):
             _LOGGER.info("Pushing the button using MagicSwitchbot device at %s...", entity._mac)
             hass.async_add_job(entity._device.push)
             
-            '''Once pushed, the switch muest get back to "Off" state'''
+            '''Once pushed, the switch must get back to "Off" state'''
             entity._state = False
             entity._last_action = "Push"            
         except Exception as e:
-            entity._state = None
             entity._last_action = "Error"
             _LOGGER.error("Failed to execute the push command with Magic Switchbot device: %s", str(e))
         entity.async_write_ha_state()
         
         return
 
-    # Register our service with Home Assistant.
+    """Register our service with Home Assistant"""
     hass.services.async_register(DOMAIN, 'push', async_push_button)
 
-    # Return boolean to indicate that initialization was successfully.
+    """"Return boolean to indicate that initialization was successfully"""
     return True

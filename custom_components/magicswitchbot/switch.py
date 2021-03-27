@@ -1,3 +1,11 @@
+"""
+Magic Switchbot component for Home Assistant
+Switch entity definition
+
+@author: ec-blaster
+@since: March 2021
+@contact: https://github.com/ec-blaster/magicswitchbot-homeassistant
+"""
 import logging
 from typing import Dict, Any
 
@@ -18,6 +26,7 @@ import voluptuous as vol
 from .const import DOMAIN
 
 from datetime import timedelta
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,11 +34,6 @@ DEFAULT_NAME = "MagicSwitchbot"
 DEFAULT_DEVICE_ID = 0
 DEFAULT_RETRY_COUNT = 3
 SCAN_INTERVAL = timedelta(seconds=60)  # We'll check the battery level every minute
-
-PROP_TO_ATTR = {
-    "battery_level": "battery_level",
-    "last_action": "last_action",
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -49,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Magic Switchbot component."""
     
-    '''Get the switch config'''
+    '''Get the switch config parameters'''
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]
     password = config.get(CONF_PASSWORD)
@@ -59,6 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     '''Initialize the device'''
     device = MagicSwitchbot(mac=mac_addr, retry_count=retry_count, password=password, interface=bt_device)
     
+    """
     '''Connect asynchronously'''
     res = await hass.async_add_executor_job(device.connect)
     if res:
@@ -66,6 +71,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         await hass.async_add_executor_job(device.auth)
     else:
         _LOGGER.warn("Error connecting to device at %s. Will retry in %d seconds", mac_addr, SCAN_INTERVAL.total_seconds())
+    """
     
     '''Initialize out custom switchs list if it does not exist in HA'''
     if DOMAIN not in hass.data:
@@ -78,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
     """Custom switch for MagicSwitchbot"""
 
-    def __init__(self, device, hass, mac, name) -> None:
+    def __init__(self, device:MagicSwitchbot, hass:HomeAssistant, mac:str, name:str) -> None:
         """Initialize the MagicSwitchbot."""
         self._state = None
         self._device = device
@@ -98,27 +104,36 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         self._hass.data[DOMAIN][self.entity_id] = self
         
         '''We get a first update at start'''
-        await self._hass.async_add_executor_job(self.update)
+        self.schedule_update_ha_state()
+#        await self._hass.async_add_executor_job(self.update)
         
-        _LOGGER.info("Added Magic Swithbot with entity_id '%s' to the list of custom switches", self.entity_id)
+        _LOGGER.debug("Added Magic Switchbot '%s' to the list of custom switches", self.entity_id)
     
     async def async_turn_on(self, **kwargs) -> None:
         """Turn device on."""
         if self._device.turn_on():
             self._state = True
             self._last_action = "On"
+            self._battery_level = self._device.get_battery()
         else:
-            self._state = None
+            # self._state = None
             self._last_action = "Error"
+        
+        self._device.disconnect()
+        # self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn device off."""
         if self._device.turn_off():
             self._state = False
             self._last_action = "Off"
+            self._battery_level = self._device.get_battery()
         else:
-            self._state = None
+            # self._state = None
             self._last_action = "Error"
+        
+        self._device.disconnect()
+        # self.schedule_update_ha_state()
 
     '''This block will only get called when using Config Entries'''
 
@@ -136,7 +151,8 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             "sw_version": "2.0",
             "via_device": (DOMAIN, self.unique_id),
         }
-        
+
+    '''        
     async def async_update(self):
         """We get the battery level on a periodic polling basis"""
         self._battery_level = self._device.get_battery()
@@ -144,13 +160,11 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             _LOGGER.debug("Battery level of %s: %d%%", self.entity_id, self._battery_level)
         else:
             _LOGGER.warn("Couldn't get battery level of %s", self.entity_id)
+        self._device.disconnect()'''
         
-    def update(self):
-        self._battery_level = self._device.get_battery()
-        
-    @property
+    """@property
     def available(self) -> bool:
-        return self._device._is_connected()
+        return self._device._is_connected()"""
     
     @property
     def is_on(self) -> bool:
@@ -176,7 +190,8 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         """Return the state attributes."""
         return {
             "last_action": self._last_action,
-            "battery_level": self._battery_level
+            "battery_level": self._battery_level,
+            "connected": self._device.is_connected()
         }
 
     @property
