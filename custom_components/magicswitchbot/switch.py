@@ -33,6 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "MagicSwitchbot"
 DEFAULT_DEVICE_ID = 0
 DEFAULT_RETRY_COUNT = 3
+CONNECT_TIMEOUT = 5
+DISCONNECT_TIMEOUT = 30
 SCAN_INTERVAL = timedelta(seconds=60)  # We'll check the battery level every minute
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -61,7 +63,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     bt_device = config.get(CONF_DEVICE_ID)
     
     '''Initialize the device'''
-    device = MagicSwitchbot(mac=mac_addr, retry_count=retry_count, password=password, interface=bt_device)
+    device = MagicSwitchbot(mac=mac_addr,
+                            retry_count=retry_count,
+                            password=password,
+                            interface=bt_device,
+                            connect_timeout=CONNECT_TIMEOUT,
+                            disconnect_timeout=DISCONNECT_TIMEOUT)
     
     """
     '''Connect asynchronously'''
@@ -107,7 +114,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         self.schedule_update_ha_state()
 #        await self._hass.async_add_executor_job(self.update)
         
-        _LOGGER.debug("Added Magic Switchbot '%s' to the list of custom switches", self.entity_id)
+        _LOGGER.debug("Added Magic Switchbot '%s' with %s address", self.entity_id, self._device._mac)
     
     async def async_turn_on(self, **kwargs) -> None:
         """Turn device on."""
@@ -118,8 +125,6 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         else:
             # self._state = None
             self._last_action = "Error"
-        
-        self._device.disconnect()
         # self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -131,8 +136,6 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         else:
             # self._state = None
             self._last_action = "Error"
-        
-        self._device.disconnect()
         # self.schedule_update_ha_state()
 
     '''This block will only get called when using Config Entries'''
