@@ -12,6 +12,7 @@ from .const import DOMAIN
 from homeassistant.core import callback
 
 from homeassistant.const import ATTR_ENTITY_ID
+from custom_components.magicswitchbot.switch import MagicSwitchbotSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,21 +36,25 @@ def async_setup(hass, config):
             return
   
         try:
-            _LOGGER.info("Pushing the button using MagicSwitchbot device at %s...", entity._mac)
-            hass.async_add_job(entity._device.push)
-            
-            '''Once pushed, the switch must get back to "Off" state'''
-            entity._state = False
-            entity._last_action = "Push"            
+            hass.loop.create_task(async_push_and_battery(entity))
         except Exception as e:
             entity._last_action = "Error"
             _LOGGER.error("Failed to execute the push command with Magic Switchbot device: %s", str(e))
         entity.async_write_ha_state()
         
         return
+    
+    async def async_push_and_battery(switch:MagicSwitchbotSwitch):
+        _LOGGER.info("Pushing the button using MagicSwitchbot device at %s...", switch._mac)
+        switch._device.push()
+        switch._battery_level = switch._device.get_battery()
+        '''Once pushed, the switch must get back to "Off" state'''
+        switch._state = False
+        switch._last_action = "Push"
 
     """Register our service with Home Assistant"""
     hass.services.async_register(DOMAIN, 'push', async_push_button)
 
     """"Return boolean to indicate that initialization was successfully"""
     return True
+    
