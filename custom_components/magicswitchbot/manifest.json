@@ -5,6 +5,7 @@
 	"config_flow": false,
 	"dependencies": [],
 	"documentation": "https://github.com/ec-blaster/magicswitchbot-homeassistant/blob/main/README.md",
+	"issue_tracker": "https://github.com/ec-blaster/magicswitchbot-homeassistant/issues",
 	"domain": "magicswitchbot",
 	"name": "Magic Switchbot",
 	"requirements": [
