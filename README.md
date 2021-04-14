@@ -1,3 +1,5 @@
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
+
 # Magic Switchbot component for Home Assistant
 A [Home Assistant](https://home-assistant.io) component for controlling [Magic Switchbot](https://www.interear.com/smart-products/magic-bluetooth-switchbot.html) devices.
 
@@ -5,7 +7,7 @@ Using this component you can control on / off /push states of these little devic
 
 ## Special requirements
 
-This component is based on a library that uses `bluepy`  to communicate with the devices via BLE (Bluetooth Low Energy), and only works on Linux.
+This component is based on a library that uses `bluepy` to communicate with the devices via BLE (Bluetooth Low Energy), and only works on Linux.
 
 Depending on your system configuration, Python will try to install or compile `bluepy` on the first use. If you get a compile error when starting Home Assistant, you may have some Linux libraries missing. Try to install them:
 
