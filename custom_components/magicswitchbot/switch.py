@@ -36,7 +36,7 @@ DEFAULT_DEVICE_ID = 0
 DEFAULT_RETRY_COUNT = 3
 CONNECT_TIMEOUT = 5
 DISCONNECT_TIMEOUT = 30
-SCAN_INTERVAL = timedelta(seconds=60)  # We'll check the battery level every minute
+SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -107,7 +107,6 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         
         '''We get a first update at start'''
         self.schedule_update_ha_state()
-#        await self._hass.async_add_executor_job(self.update)
         
         _LOGGER.debug("Added Magic Switchbot '%s' with %s address", self.entity_id, self._device._mac)
     
@@ -118,9 +117,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             self._last_action = "On"
             self._battery_level = self._device.get_battery()
         else:
-            # self._state = None
             self._last_action = "Error"
-        # self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn device off."""
@@ -129,9 +126,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             self._last_action = "Off"
             self._battery_level = self._device.get_battery()
         else:
-            # self._state = None
             self._last_action = "Error"
-        # self.schedule_update_ha_state()
 
     '''This block will only get called when using Config Entries'''
 
@@ -150,7 +145,7 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             "via_device": (DOMAIN, self.unique_id),
         }
 
-    '''        
+    '''
     async def async_update(self):
         """We get the battery level on a periodic polling basis"""
         self._battery_level = self._device.get_battery()
@@ -159,10 +154,6 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
         else:
             _LOGGER.warn("Couldn't get battery level of %s", self.entity_id)
         self._device.disconnect()'''
-        
-    """@property
-    def available(self) -> bool:
-        return self._device._is_connected()"""
     
     @property
     def is_on(self) -> bool:
