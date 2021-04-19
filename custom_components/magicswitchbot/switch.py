@@ -75,16 +75,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                             connect_timeout=connect_timeout,
                             disconnect_timeout=DISCONNECT_TIMEOUT)
     
-    """
-    '''Connect asynchronously'''
-    res = await hass.async_add_executor_job(device.connect)
-    if res:
-        '''Let's auth (max time 5 seconds or will be disconnected)'''
-        await hass.async_add_executor_job(device.auth)
-    else:
-        _LOGGER.warn("Error connecting to device at %s. Will retry in %d seconds", mac_addr, SCAN_INTERVAL.total_seconds())
-    """
-    
     '''Initialize out custom switchs list if it does not exist in HA'''
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
