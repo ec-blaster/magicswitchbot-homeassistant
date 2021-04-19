@@ -17,6 +17,7 @@ from homeassistant.const import (
   CONF_NAME,
   CONF_PASSWORD,
   CONF_DEVICE_ID,
+  CONF_TIMEOUT,
   CONF_COUNT
 )
 import homeassistant.helpers.config_validation as cv
@@ -42,6 +43,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_TIMEOUT, default=CONNECT_TIMEOUT): vol.All(
+            vol.Coerce(int), vol.Range(min=0)
+        ),
         vol.Optional(CONF_COUNT, default=DEFAULT_RETRY_COUNT): vol.All(
             vol.Coerce(int), vol.Range(min=0)
         ),
@@ -59,6 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]
     password = config.get(CONF_PASSWORD)
+    connect_timeout = config.get(CONF_TIMEOUT)
     retry_count = config.get(CONF_COUNT)
     bt_device = config.get(CONF_DEVICE_ID)
     
@@ -67,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                             retry_count=retry_count,
                             password=password,
                             interface=bt_device,
-                            connect_timeout=CONNECT_TIMEOUT,
+                            connect_timeout=connect_timeout,
                             disconnect_timeout=DISCONNECT_TIMEOUT)
     
     """
