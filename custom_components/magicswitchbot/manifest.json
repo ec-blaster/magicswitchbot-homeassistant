@@ -11,5 +11,6 @@
 	"requirements": [
 		"pyMagicSwitchbot==1.0.14"
 	],
+	"iot_class": "assumed_state",
 	"version": "1.0.1"
 }
