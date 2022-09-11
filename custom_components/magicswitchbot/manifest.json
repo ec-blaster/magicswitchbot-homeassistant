@@ -9,7 +9,15 @@
 	"domain": "magicswitchbot",
 	"name": "Magic Switchbot",
 	"requirements": [
-		"pyMagicSwitchbot==1.0.14"
+		"pyMagicSwitchbot==1.1.0"
 	],
-	"version": "1.0.2"
+	"bluetooth": [
+    {
+      "local_name": "MagicSwitchBot"
+    },
+    {
+      "service_uuid": "0000fee7-0000-1000-8000-00805f9b34fb"
+    }
+  ],
+	"version": "1.1.0"
 }
