@@ -30,6 +30,7 @@ from .const import (
     DEFAULT_RETRY_COUNT,
     DOMAIN
 )
+from .coordinator import MagicSwitchbotDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MagicSwitchbot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
-        # Bleak uses addresses not mac addresses which are are actually
+        # Bleak uses addresses, not mac addresses, which are are actually
         # UUIDs on some platforms (MacOS).
         mac = entry.data[CONF_MAC]
         if "-" not in mac:
@@ -101,6 +102,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 """ CÓDIGO ANTIGUO """
 
+'''
 from custom_components.magicswitchbot.switch import MagicSwitchbotSwitch
 
 
@@ -112,10 +114,10 @@ def async_setup(hass, config):
     def async_push_button(call):
         """Define a service to push a button with MagicSwitchbot"""
         
-        '''We get the entity_id to push from the service parameter''' 
+        """We get the entity_id to push from the service parameter"""
         entity_id = call.data.get(ATTR_ENTITY_ID)
         
-        '''We look for that entity id in our known custom switches list'''
+        """We look for that entity id in our known custom switches list"""
         if entity_id in hass.data[DOMAIN]:
             entity = hass.data[DOMAIN][entity_id]
         else:
@@ -135,7 +137,7 @@ def async_setup(hass, config):
         _LOGGER.info("Pushing the button using MagicSwitchbot device at %s...", switch._mac)
         switch._device.push()
         switch._battery_level = switch._device.get_battery()
-        '''Once pushed, the switch must get back to "Off" state'''
+        """Once pushed, the switch must get back to _Off_ state"""
         switch._state = False
         switch._last_action = "Push"
 
@@ -145,3 +147,4 @@ def async_setup(hass, config):
     """"Return boolean to indicate that initialization was successfully"""
     return True
     
+'''
