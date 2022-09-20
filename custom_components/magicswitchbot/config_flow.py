@@ -49,25 +49,36 @@ class MagicSwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        _LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
+        _LOGGER.debug("Discovered MagicSwitchbot device with address: %s. RSSI: %d. Manufacturer data: %s", discovery_info.address,
+                      discovery_info.rssi, discovery_info.manufacturer_data)
+        
+        """Set the device unique id based on its address"""
         await self.async_set_unique_id(format_unique_id(discovery_info.address))
+        
+        """Ensure that the id is unique indeed"""
         self._abort_if_unique_id_configured()
+        
+        """Parse whatever info we find in the advertising data"""
         discovery_info_bleak = cast(BluetoothServiceInfoBleak, discovery_info)
         parsed = parse_advertisement_data(
             discovery_info_bleak.device, discovery_info_bleak.advertisement
         )
+        _LOGGER.debug("Parsed advertising data: %s", parsed)
+        
         if not parsed:
             return self.async_abort(reason="not_supported")
+          
+        
         self._discovered_adv = parsed
         data = parsed.data
         self.context["title_placeholders"] = {
-            "name": data["modelName"],
+            "name": data["model"],
             "address": discovery_info.address,
         }
         return await self.async_step_user()
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None=None
     ) -> FlowResult:
         """Handle the user step to pick discovered device."""
         errors: dict[str, str] = {}
@@ -105,7 +116,7 @@ class MagicSwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_ADDRESS): vol.In(
                     {
-                        address: f"{parsed.data['modelName']} ({address})"
+                        address: f"{parsed.data['model']} ({address})"
                         for address, parsed in self._discovered_advs.items()
                     }
                 ),
@@ -126,7 +137,7 @@ class MagicSwitchbotOptionsFlowHandler(OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None=None
     ) -> FlowResult:
         """Manage MagicSwitchbot options."""
         if user_input is not None:
