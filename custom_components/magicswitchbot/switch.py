@@ -9,171 +9,121 @@ Switch entity definition
 import logging
 from typing import Dict, Any
 
-from magicswitchbot import MagicSwitchbot
+from magicswitchbotasync import MagicSwitchbot
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-  CONF_MAC,
+  CONF_ADDRESS,
   CONF_NAME,
   CONF_PASSWORD,
   CONF_DEVICE_ID,
   CONF_TIMEOUT,
-  CONF_COUNT
+  CONF_COUNT,
+  STATE_ON
 )
+
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.restore_state import RestoreEntity
 import voluptuous as vol
 
 from .const import DOMAIN
+from .coordinator import MagicSwitchbotDataUpdateCoordinator
+from .entity import MagicSwitchbotEntity
 
 from datetime import timedelta
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "MagicSwitchbot"
-DEFAULT_DEVICE_ID = 0
-DEFAULT_RETRY_COUNT = 3
-CONNECT_TIMEOUT = 5
-DISCONNECT_TIMEOUT = 30
-SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=CONNECT_TIMEOUT): vol.All(
-            vol.Coerce(int), vol.Range(min=0)
-        ),
-        vol.Optional(CONF_COUNT, default=DEFAULT_RETRY_COUNT): vol.All(
-            vol.Coerce(int), vol.Range(min=0)
-        ),
-        vol.Optional(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): vol.All(
-            vol.Coerce(int), vol.Range(min=0)
-        ),
-    }
-)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
+    """Set up MagicSwitchbot based on a config entry."""
+    coordinator: MagicSwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    unique_id = entry.unique_id
+    assert unique_id is not None
+    async_add_entities(
+        [
+            MagicSwitchbotEntity(
+                coordinator,
+                unique_id,
+                entry.data[CONF_ADDRESS],
+                entry.data[CONF_NAME]
+            )
+        ]
+    )
+    
+    
+class MagicSwitchbotBotEntity(MagicSwitchbotEntity, SwitchEntity, RestoreEntity):
+    """Representation of a MagicSwitchbot."""
 
+    #_attr_device_class = SwitchDeviceClass.SWITCH
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Magic Switchbot component."""
-    
-    '''Get the switch config parameters'''
-    name = config.get(CONF_NAME)
-    mac_addr = config[CONF_MAC]
-    password = config.get(CONF_PASSWORD)
-    connect_timeout = config.get(CONF_TIMEOUT)
-    retry_count = config.get(CONF_COUNT)
-    bt_device = config.get(CONF_DEVICE_ID)
-    
-    '''Initialize the device'''
-    device = MagicSwitchbot(mac=mac_addr,
-                            retry_count=retry_count,
-                            password=password,
-                            interface=bt_device,
-                            connect_timeout=connect_timeout,
-                            disconnect_timeout=DISCONNECT_TIMEOUT)
-    
-    '''Initialize out custom switchs list if it does not exist in HA'''
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    
-    '''Create our entity'''
-    async_add_entities([MagicSwitchbotSwitch(device, hass, mac_addr, name)])
-
-    
-class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
-    """Custom switch for MagicSwitchbot"""
-
-    def __init__(self, device:MagicSwitchbot, hass:HomeAssistant, mac:str, name:str) -> None:
+    def __init__(
+        self,
+        coordinator: MagicSwitchbotDataUpdateCoordinator,
+        unique_id: str,
+        address: str,
+        name: str,
+        device: MagicSwitchbot,
+        _last_action: None,
+        _battery_level: None
+    ) -> None:
         """Initialize the MagicSwitchbot."""
-        self._state = None
+        super().__init__(coordinator, unique_id, address, name)
+        self._attr_unique_id = unique_id
         self._device = device
-        self._hass = hass
-        self._last_action = None
-        self._name = name
-        self._mac = mac
-        self._battery_level = None
+        self._attr_is_on = False
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if not state:
+        if not (last_state := await self.async_get_last_state()):
             return
-        self._state = state.state == "on"
-        self._hass.data[DOMAIN][self.entity_id] = self
-        
-        '''We get a first update at start'''
-        self.schedule_update_ha_state()
-        
-        _LOGGER.debug("Added Magic Switchbot '%s' with %s address", self.entity_id, self._device._mac)
-    
-    async def async_turn_on(self, **kwargs) -> None:
+        self._attr_is_on = last_state.state == STATE_ON
+        self._last_run_success = last_state.attributes["last_run_success"]
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        if self._device.turn_on():
-            self._state = True
+        _LOGGER.info("Turn MagicSwitchbot bot on %s", self._address)
+
+        self._last_run_success = bool(await self._device.turn_on())
+        if self._last_run_success:
+            self._attr_is_on = True           
             self._last_action = "On"
-            self._battery_level = self._device.get_battery()
-        else:
-            self._last_action = "Error"
+            self._battery_level = self.device.get_battery()
+        self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        if self._device.turn_off():
-            self._state = False
+        _LOGGER.info("Turn MagicSwitchbot bot off %s", self._address)
+
+        self._last_run_success = bool(await self._device.turn_off())
+        if self._last_run_success:
+            self._attr_is_on = False
             self._last_action = "Off"
-            self._battery_level = self._device.get_battery()
-        else:
-            self._last_action = "Error"
-
-    '''This block will only get called when using Config Entries'''
+            self._battery_level = self.device.get_battery()
+        self.async_write_ha_state()
 
     @property
-    def device_info(self):
-        """Define a device for this switch"""
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
-            },
-            "name": self.name,
-            "manufacturer": "Shenzhen Interear Intelligent Technology",
-            "model": "Magic Switchbot",
-            "sw_version": "2.0",
-            "via_device": (DOMAIN, self.unique_id),
-        }
+    def assumed_state(self) -> bool:
+        """Return true if unable to access real state of entity."""
+        if not self.data["data"]["switchMode"]:
+            return True
+        return False
 
-    '''
-    async def async_update(self):
-        """We get the battery level on a periodic polling basis"""
-        self._battery_level = self._device.get_battery()
-        if self._battery_level is not None:
-            _LOGGER.debug("Battery level of %s: %d%%", self.entity_id, self._battery_level)
-        else:
-            _LOGGER.warn("Couldn't get battery level of %s", self.entity_id)
-        self._device.disconnect()'''
-    
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return self._state
+        if not self.data["data"]["switchMode"]:
+            return self._attr_is_on
+        return self.data["data"]["isOn"]
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "magicswitchbot_" + self._mac.replace(":", "")
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        return "mdi:toggle-switch"
-    
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
@@ -182,8 +132,3 @@ class MagicSwitchbotSwitch(SwitchEntity, RestoreEntity):
             "battery_level": self._battery_level,
             "connected": self._device.is_connected()
         }
-
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
-        """Backwards compatibility. Will be soon deprecated"""
-        return self.extra_state_attributes

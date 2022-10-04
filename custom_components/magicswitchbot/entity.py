@@ -36,7 +36,7 @@ class MagicSwitchbotEntity(PassiveBluetoothCoordinatorEntity):
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_BLUETOOTH, self._address)},
             manufacturer=MANUFACTURER,
-            model=self.data["modelName"],
+            model=self.data["model"],
             name=name,
         )
         if ":" not in self._address:

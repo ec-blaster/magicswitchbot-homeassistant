@@ -50,7 +50,9 @@ class MagicSwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator)
             discovery_info_bleak.device, discovery_info_bleak.advertisement
         ):
             self.data = adv.data
-            if "modelName" in self.data:
+            _LOGGER.debug("Datos recibidos por bluetooth: %s", self.data)
+            
+            if "model" in self.data:
                 self._ready_event.set()
             _LOGGER.debug("%s: MagicSwitchbot data: %s", self.ble_device.address, self.data)
             self.device.update_from_advertisement(adv)
