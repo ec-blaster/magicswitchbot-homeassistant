@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     
     _LOGGER.debug("Configuración pospuesta")
     
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SWITCH])
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SWITCH, Platform.BUTTON])
 
     _LOGGER.debug("Proceso de inserción finalizado. Datos de la entidad: %s. Opciones: %s", entry.data, entry.options)
     return True

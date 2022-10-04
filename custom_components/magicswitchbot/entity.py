@@ -15,7 +15,7 @@ from .const import MANUFACTURER
 from .coordinator import MagicSwitchbotDataUpdateCoordinator
 
 
-class MagicSwitchbotGenericEntity(PassiveBluetoothCoordinatorEntity):
+class MagicSwitchbotEntity(PassiveBluetoothCoordinatorEntity):
     """Generic entity encapsulating common features of MagicSwitchbot device."""
 
     coordinator: MagicSwitchbotDataUpdateCoordinator
@@ -39,7 +39,7 @@ class MagicSwitchbotGenericEntity(PassiveBluetoothCoordinatorEntity):
             model=self.data["model"],
             name=name,
         )
-        self._icon = "mdi:gesture-tap-button"
+
         if ":" not in self._address:
             # MacOS Bluetooth addresses are not mac addresses
             return

@@ -11,28 +11,21 @@ from typing import Dict, Any
 
 from magicswitchbotasync import MagicSwitchbot
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
   CONF_ADDRESS,
   CONF_NAME,
-  CONF_PASSWORD,
-  CONF_DEVICE_ID,
-  CONF_TIMEOUT,
-  CONF_COUNT,
   STATE_ON
 )
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.restore_state import RestoreEntity
-import voluptuous as vol
 
 from .const import DOMAIN
 from .coordinator import MagicSwitchbotDataUpdateCoordinator
-from .entity import MagicSwitchbotGenericEntity
+from .entity import MagicSwitchbotEntity
 
-from datetime import timedelta
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +42,7 @@ async def async_setup_entry(
     assert unique_id is not None
     async_add_entities(
         [
-            MagicSwitchbotEntity(
+            MagicSwitchbotSwitchEntity(
                 coordinator,
                 unique_id,
                 entry.data[CONF_ADDRESS],
@@ -60,10 +53,10 @@ async def async_setup_entry(
     )
     
     
-class MagicSwitchbotEntity(MagicSwitchbotGenericEntity, SwitchEntity, RestoreEntity):
-    """Representation of a MagicSwitchbot."""
+class MagicSwitchbotSwitchEntity(MagicSwitchbotEntity, SwitchEntity, RestoreEntity):
+    """Representation of a MagicSwitchbot switch functionality."""
 
-    # _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(
         self,
@@ -81,6 +74,7 @@ class MagicSwitchbotEntity(MagicSwitchbotGenericEntity, SwitchEntity, RestoreEnt
         self._attr_is_on = False
         self._last_action = None
         self._battery_level = None
+        self._icon = "mdi:light-switch"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
