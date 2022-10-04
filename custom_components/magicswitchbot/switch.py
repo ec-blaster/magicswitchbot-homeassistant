@@ -88,7 +88,8 @@ class MagicSwitchbotEntity(MagicSwitchbotGenericEntity, SwitchEntity, RestoreEnt
         if not (last_state := await self.async_get_last_state()):
             return
         self._attr_is_on = last_state.state == STATE_ON
-        self._last_run_success = last_state.attributes["last_run_success"]
+        if "last_run_success" in last_state.attributes:
+            self._last_run_success = last_state.attributes["last_run_success"]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
@@ -98,7 +99,7 @@ class MagicSwitchbotEntity(MagicSwitchbotGenericEntity, SwitchEntity, RestoreEnt
         if self._last_run_success:
             self._attr_is_on = True           
             self._last_action = "On"
-            self._battery_level = self.device.get_battery()
+            self._battery_level = await self._device.get_battery()
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -109,7 +110,7 @@ class MagicSwitchbotEntity(MagicSwitchbotGenericEntity, SwitchEntity, RestoreEnt
         if self._last_run_success:
             self._attr_is_on = False
             self._last_action = "Off"
-            self._battery_level = self.device.get_battery()
+            self._battery_level = await self._device.get_battery()
         self.async_write_ha_state()
 
     @property

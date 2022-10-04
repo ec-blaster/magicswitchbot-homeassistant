@@ -39,6 +39,7 @@ class MagicSwitchbotGenericEntity(PassiveBluetoothCoordinatorEntity):
             model=self.data["model"],
             name=name,
         )
+        self._icon = "mdi:gesture-tap-button"
         if ":" not in self._address:
             # MacOS Bluetooth addresses are not mac addresses
             return
@@ -59,3 +60,7 @@ class MagicSwitchbotGenericEntity(PassiveBluetoothCoordinatorEntity):
     def extra_state_attributes(self) -> Mapping[Any, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}
+
+    @property
+    def icon(self):
+        return self._icon
