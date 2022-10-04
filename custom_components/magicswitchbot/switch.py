@@ -30,7 +30,7 @@ import voluptuous as vol
 
 from .const import DOMAIN
 from .coordinator import MagicSwitchbotDataUpdateCoordinator
-from .entity import MagicSwitchbotEntity
+from .entity import MagicSwitchbotGenericEntity
 
 from datetime import timedelta
 from homeassistant.core import HomeAssistant
@@ -53,16 +53,17 @@ async def async_setup_entry(
                 coordinator,
                 unique_id,
                 entry.data[CONF_ADDRESS],
-                entry.data[CONF_NAME]
+                entry.data[CONF_NAME],
+                coordinator.device
             )
         ]
     )
     
     
-class MagicSwitchbotBotEntity(MagicSwitchbotEntity, SwitchEntity, RestoreEntity):
+class MagicSwitchbotEntity(MagicSwitchbotGenericEntity, SwitchEntity, RestoreEntity):
     """Representation of a MagicSwitchbot."""
 
-    #_attr_device_class = SwitchDeviceClass.SWITCH
+    # _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(
         self,
@@ -70,15 +71,16 @@ class MagicSwitchbotBotEntity(MagicSwitchbotEntity, SwitchEntity, RestoreEntity)
         unique_id: str,
         address: str,
         name: str,
-        device: MagicSwitchbot,
-        _last_action: None,
-        _battery_level: None
+        device: MagicSwitchbot
+        
     ) -> None:
         """Initialize the MagicSwitchbot."""
         super().__init__(coordinator, unique_id, address, name)
         self._attr_unique_id = unique_id
         self._device = device
         self._attr_is_on = False
+        self._last_action = None
+        self._battery_level = None
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -112,23 +114,23 @@ class MagicSwitchbotBotEntity(MagicSwitchbotEntity, SwitchEntity, RestoreEntity)
 
     @property
     def assumed_state(self) -> bool:
-        """Return true if unable to access real state of entity."""
-        if not self.data["data"]["switchMode"]:
-            return True
-        return False
+        """Returns the last known state if unable to access real state of entity."""
+        if not "isOn" in self.data["data"]:
+            return self._last_action == "On"
+        return self.data["data"]["isOn"]
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        if not self.data["data"]["switchMode"]:
+        if not "isOn" in self.data["data"]:
             return self._attr_is_on
-        return self.data["data"]["isOn"]
+        else:
+            return self.data["data"]["isOn"]
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         return {
             "last_action": self._last_action,
-            "battery_level": self._battery_level,
-            "connected": self._device.is_connected()
+            "battery_level": self._battery_level
         }

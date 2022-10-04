@@ -15,7 +15,7 @@ from .const import MANUFACTURER
 from .coordinator import MagicSwitchbotDataUpdateCoordinator
 
 
-class MagicSwitchbotEntity(PassiveBluetoothCoordinatorEntity):
+class MagicSwitchbotGenericEntity(PassiveBluetoothCoordinatorEntity):
     """Generic entity encapsulating common features of MagicSwitchbot device."""
 
     coordinator: MagicSwitchbotDataUpdateCoordinator
