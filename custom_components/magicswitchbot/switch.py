@@ -9,7 +9,7 @@ Switch entity definition
 import logging
 from typing import Dict, Any
 
-from magicswitchbotasync import MagicSwitchbot
+from magicswitchbot import MagicSwitchbot
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry

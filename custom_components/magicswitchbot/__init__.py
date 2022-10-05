@@ -9,7 +9,7 @@ Service definition
 
 import logging
 
-from magicswitchbotasync import MagicSwitchbot
+from magicswitchbot import MagicSwitchbot
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry

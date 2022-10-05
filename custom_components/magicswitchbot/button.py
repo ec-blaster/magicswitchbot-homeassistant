@@ -1,7 +1,7 @@
 import logging
 
 from typing import Dict, Any
-from magicswitchbotasync import MagicSwitchbot
+from magicswitchbot import MagicSwitchbot
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry

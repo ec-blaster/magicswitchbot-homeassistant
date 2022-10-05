@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from magicswitchbotasync import parse_advertisement_data,MagicSwitchbot
+from magicswitchbot import parse_advertisement_data,MagicSwitchbot
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
