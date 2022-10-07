@@ -1,4 +1,4 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
 # Magic Switchbot component for Home Assistant
 A [Home Assistant](https://home-assistant.io) component for controlling [Magic Switchbot](https://www.interear.com/smart-products/magic-bluetooth-switchbot.html) devices.
