@@ -1,0 +1,33 @@
+{
+  "title" : "MagicSwitchbot device",
+  "config": {
+    "flow_title": "{name} ({address})",
+    "step": {
+      "user": {
+        "title": "Setup MagicSwitchbot device",
+        "data": {
+          "address": "Device address",
+          "name": "Entity name",
+          "password": "MagicSwitchbot PIN"
+        }
+      }
+    },
+    "error": {},
+    "abort": {
+      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_unconfigured_devices": "No unconfigured devices found.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "switchbot_unsupported_type": "Unsupported Device Type."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "retry_count": "Retry count"
+        }
+      }
+    }
+  }
+}

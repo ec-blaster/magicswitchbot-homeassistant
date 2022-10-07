@@ -1,4 +1,10 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![GitHub_Latest_Release](https://img.shields.io/github/release/ec-blaster/magicswitchbot-homeassistant.svg?style=for-the-badge)](https://github.com/ec-blaster/magicswitchbot-homeassistant/releases/latest)
+
+
+{% if prerelease %}
+## **NB!** This is a beta/pre-release version!
+{% endif %}
 
 # Magic Switchbot component for Home Assistant
 A [Home Assistant](https://home-assistant.io) component for controlling [Magic Switchbot](https://www.interear.com/smart-products/magic-bluetooth-switchbot.html) devices.
@@ -7,18 +13,9 @@ Using this component you can control on / off /push states of these little devic
 
 ## Special requirements
 
-This component is based on a library that uses `bluepy` to communicate with the devices via BLE (Bluetooth Low Energy), and only works on Linux.
+This component is based on a `bleak` library to communicate with the devices via BLE (Bluetooth Low Energy), so theoretically it should work on Linux, Windows or Mac.
 
-Depending on your system configuration, Python will try to install or compile `bluepy` on the first use. If you get a compile error when starting Home Assistant, you may have some Linux libraries missing. Try to install them:
-
-```bash
-$ sudo apt-get install build-essential
-$ sudo apt-get install libglib2.0-dev
-```
-
-and then restart Home Assistant.
-
-Additionally, if you are running Home Assistant Core as a non-root user, you must read the section "Notes for Home Assistant Core Installations" at [this integration](https://www.home-assistant.io/integrations/bluetooth_le_tracker/#rootless-setup-on-core-installs) documentation. In fact you should run these commands to get the required permissions for HA to access the bluetooth controller:
+If you are running Home Assistant Core as a non-root user, you must read the section "Notes for Home Assistant Core Installations" at [this integration](https://www.home-assistant.io/integrations/bluetooth_le_tracker/#rootless-setup-on-core-installs) documentation. In fact you should run these commands to get the required permissions for HA to access the bluetooth controller:
 
 ``` bash
 sudo apt-get install libcap2-bin
@@ -28,7 +25,12 @@ sudo setcap 'cap_net_raw+ep' $(readlink -f $(which hcitool))
 
 ## Installation
 
-You can install this component with [HACS](https://github.com/hacs/integration). Add `https://github.com/ec-blaster/magicswitchbot-homeassistant` as an integration "custom repository" and install it.
+### Using [HACS](https://hacs.xyz/) (recommended)
+
+This integration can be installed using HACS.
+To do it search for `Magic Switchbot` in *Integrations* section.
+
+### Manual
 
 You can also install it manually:
 
@@ -51,75 +53,33 @@ $ rm -rf /tmp/magicswitchbot-homeassistant
 
 ## Configuration
 
-To use the component, you must define a switch with platform `magicswitchbot` for each device you want to connect:
+* The component now is now configured from the UI, but before using it you must have the [bluetooth integration](https://www.home-assistant.io/integrations/bluetooth/) installed.
+* Once you have your bluetooth interface working, you must click on Setting.
+* Next click on "Devices & Services".
+* Finally on "+ADD INTEGRATION".
+* Type "Magic Switchbot" and a wizard will guide you to add a new MagicSwitchbot device. The device is identified by its MAC address, and you have to enter the name you will give to your device and the PIN you have set with the official Android app (optional).
 
-```yaml
-# Example configuration.yaml entries
-switch:
-  - platform: magicswitchbot
-    name: "Magic 1"
-    mac: "00:11:22:33:44:55"
-    device_id: 1
+When you enter the "Devices & Services option", your device may be have been discovered by Home Assistant. If this happens, you don't press "+ADD INTEGRATION", but directly click on it instead.
 
-  - platform: magicswitchbot
-    name: "Magic 2"
-    mac: "aa:bb:cc:dd:ee:ff"
-    device_id: 1
-    
-    ...
-```
+**BREAKING CHANGE**: If you had previously used an older version of the integration, you must delete your configuration options from your `yaml`file. It will not work this way any more.
 
-### Configuration Variables
+## Device and Entities
 
-**`mac`** string (Required)
+When you add a MagicSwitchbot device, Home Assistant will create a device and 2 entities in it:
 
-The bluetooth MAC address of the Magic Switchbot device. You can get the MAC just using the [official app](https://play.google.com/store/apps/details?id=com.runChina.moLiKaiGuan&hl=es&gl=US) and scanning for the device.
+* A **switch**, with the entity_id: `switch.<configured_name>`.
 
-**`device_id`** number (Optional, default: 0)
+  This is the default entity we used in previous versions of the integration.
 
-This is the device number of the bluetooth controller. Usually, you'll have only a bluetooth controller, whose id would be `hci0`, so that you don't need to specify this variable. If you have more than one controller, you can look for its id typing:
+  With the switch entity, you can use the Magic Switchbot as a switch, with states "On" and "Off". You must use an add-on that is shipped with the device and is sticked over the real switch you want to activate or deactivate, it works like a "hook" that pulls the switch when its state changes to "Off".
 
-```bash
-$ sudo hciconfig
-```
+* A **button**, with the entity_id: `button.<configured_name>`. 
 
-Then you get the list of bluetooth controllers present in your system:
+  With the button entity, the Magic Switchbot uses another mode that just "pushes" a button and retracts a little after that.
 
-```bash
-hci1:   Type: Primary  Bus: UART
-        BD Address: AA:AA:AA:AA:AA:AA  ACL MTU: 1021:8  SCO MTU: 64:1
-        UP RUNNING 
-        RX bytes:623829 acl:22548 sco:0 events:2557 errors:0
-        TX bytes:64463 acl:2186 sco:0 commands:289 errors:0
+  **Breaking change**: We have no more a `push` service defined in the switch entity.
 
-hci0:   Type: Primary  Bus: SDIO
-        BD Address: 00:00:00:00:00:00  ACL MTU: 0:0  SCO MTU: 0:0
-        DOWN 
-        RX bytes:0 acl:0 sco:0 events:0 errors:0
-        TX bytes:0 acl:0 sco:0 commands:0 errors:0
-```
-
-If you are using the device `hci1`, you must specify `device_id: 1` in your `configuration.yaml`.
-
-**`password`** string (Optional, default: empty)
-
-This is the password you use to connect to the Magic Switchbot. You can set it with the [official app](https://play.google.com/store/apps/details?id=com.runChina.moLiKaiGuan&hl=es&gl=US), and it's empty by default.
-
-## Services
-
-With the default configuration, you can use the Magic Switchbot as a switch, with states "On" and "Off". You must use an add-on that is shipped with the device and is sticked over the real switch you want to activate or deactivate, it works like a "hook" that pulls the switch when its state changes to "Off".
-
-But the Magic Switchbot has another mode that just "pushes" a button and retracts a little after that. To use this characteristic (that has no On-Off states), the component provides a service whose name is `push` that you can use in your automations or from your lovelace cards.
-
-### Service parameters
-
-The service has an only parameter:
-
-**`entity_id`** string (Required)
-
-The entity id of the switch you previously configured.
-
-### Service call examples
+### Use examples
 
 This is an example of an automation that "pushes the button" of the coffee maker at 6:30AM every working day.
 
@@ -138,9 +98,9 @@ automation:
         - thu
         - fri
     action:
-      - service: magicswitchbot.push
-        service_data:
-          entity_id: switch.magic_1
+      - service: button.press
+        target:
+          entity_id: button.magic_1
       
 ```
 
@@ -168,9 +128,9 @@ entities:
     icon: 'mdi:gesture-tap-button'
     tap_action:
       action: call-service
-      service: magicswitchbot.push
-      service_data:
-        entity_id: switch.magic_1
+      service: button.press
+      target:
+        entity_id: button.magic_1
     action_name: Push
   - type: section
     label: Magic Switchbot 2
@@ -188,9 +148,9 @@ entities:
     icon: 'mdi:gesture-tap-button'
     tap_action:
       action: call-service
-      service: magicswitchbot.push
-      service_data:
-        entity_id: switch.magic_2
+      service: button.press
+      target:
+        entity_id: button.magic_2
     action_name: Push
 
 ```
