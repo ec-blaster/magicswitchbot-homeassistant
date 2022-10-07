@@ -9,7 +9,7 @@
 	"domain": "magicswitchbot",
 	"name": "Magic Switchbot",
 	"requirements": [
-		"pyMagicSwitchbot==1.1.1"
+		"pyMagicSwitchbot==1.1.2"
 	],
 	"bluetooth": [
     {
