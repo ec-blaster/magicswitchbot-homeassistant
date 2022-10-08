@@ -31,7 +31,7 @@ class MagicSwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator)
         device: MagicSwitchbot,
     ) -> None:
         """Initialize global MagicSwitchbot data updater."""
-        super().__init__(hass, logger, ble_device.address)
+        super().__init__(hass, logger, ble_device.address, mode=BluetoothScanningMode.PASSIVE)
         self.ble_device = ble_device
         self.device = device
         self.data: dict[str, Any] = {}
