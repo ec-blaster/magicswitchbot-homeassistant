@@ -1,5 +1,5 @@
 {
-  "title" : "Dispositivo MagicSwitchbot",
+  "title" : "MagicSwitchbot",
   "config": {
     "flow_title": "{name} ({address})",
     "step": {

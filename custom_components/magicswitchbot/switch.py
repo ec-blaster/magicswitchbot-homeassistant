@@ -87,7 +87,7 @@ class MagicSwitchbotSwitchEntity(MagicSwitchbotEntity, SwitchEntity, RestoreEnti
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        _LOGGER.info("Turn MagicSwitchbot bot on %s", self._address)
+        _LOGGER.info("MagicSwitchbot[%s] Turn the switch on", self._address)
 
         self._last_run_success = bool(await self._device.turn_on())
         if self._last_run_success:
@@ -98,7 +98,7 @@ class MagicSwitchbotSwitchEntity(MagicSwitchbotEntity, SwitchEntity, RestoreEnti
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        _LOGGER.info("Turn MagicSwitchbot bot off %s", self._address)
+        _LOGGER.info("MagicSwitchbot[%s] Turn the switch off", self._address)
 
         self._last_run_success = bool(await self._device.turn_off())
         if self._last_run_success:

@@ -2,5 +2,5 @@
   "name": "Magic Switchbot",
   "render_readme": true,
   "iot_class": "Assumed State",
-  "homeassistant" : "2022.8.1"
+  "homeassistant" : "2022.9.1"
 }

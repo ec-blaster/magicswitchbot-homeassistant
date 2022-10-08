@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from magicswitchbot import parse_advertisement_data,MagicSwitchbot
+from magicswitchbot import parse_advertisement_data, MagicSwitchbot
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +30,11 @@ class MagicSwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator)
         device: MagicSwitchbot,
     ) -> None:
         """Initialize global MagicSwitchbot data updater."""
-        super().__init__(hass, logger, ble_device.address)
+        super().__init__(hass,
+            logger,
+            ble_device.address,
+            bluetooth.BluetoothScanningMode.ACTIVE,
+            True)
         self.ble_device = ble_device
         self.device = device
         self.data: dict[str, Any] = {}
@@ -50,11 +53,11 @@ class MagicSwitchbotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator)
             discovery_info_bleak.device, discovery_info_bleak.advertisement
         ):
             self.data = adv.data
-            _LOGGER.debug("Datos recibidos por bluetooth: %s", self.data)
+            _LOGGER.debug("MagicSwitchbot[%s] Bluetooth received data: %s", self.ble_device.address, self.data)
             
             if "model" in self.data:
                 self._ready_event.set()
-            _LOGGER.debug("%s: MagicSwitchbot data: %s", self.ble_device.address, self.data)
+
             self.device.update_from_advertisement(adv)
         self.async_update_listeners()
 

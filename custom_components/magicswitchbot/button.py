@@ -74,7 +74,7 @@ class MagicSwitchbotButtonEntity(MagicSwitchbotEntity, ButtonEntity):
             
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
-        _LOGGER.info("Push MagicSwitchbot button on %s", self._address)
+        _LOGGER.info("MagicSwitchbot[%s] Pushing the button", self._address)
 
         self._last_run_success = bool(await self._device.push())
         if self._last_run_success:
